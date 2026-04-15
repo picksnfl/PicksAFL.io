@@ -372,6 +372,8 @@ function crearJuegos(){
 
     /* Cargar datos guardados */
     const datos = guardado[i-1] || {};
+    let equipoLocal = datos.local || "";
+    let equipoVisitante = datos.visitante || "";
 
     if(datos.visitante){
       visNombre.innerHTML = `<img class="logo" src="${logos[datos.visitante]}" />`;
@@ -390,27 +392,30 @@ function crearJuegos(){
 
     /* Guardar */
     function guardar(){
-      const dataSemana = JSON.parse(localStorage.getItem("semana"+semana)) || [];
-      dataSemana[i-1] = {
-        local: locNombre.querySelector("img") ? getTeamFromImg(locNombre.querySelector("img").src) : "",
-        visitante: visNombre.querySelector("img") ? getTeamFromImg(visNombre.querySelector("img").src) : "",
-        ganador: selGan.value || "",
-        pick: dataSemana[i-1]?.pick || null
-      };
-      localStorage.setItem("semana"+semana, JSON.stringify(dataSemana));
-      calcularAciertos();
-    }
+  const dataSemana = JSON.parse(localStorage.getItem("semana"+semana)) || [];
 
+  dataSemana[i-1] = {
+    local: equipoLocal,
+    visitante: equipoVisitante,
+    ganador: selGan.value || "",
+    pick: dataSemana[i-1]?.pick || null
+  };
+
+  localStorage.setItem("semana"+semana, JSON.stringify(dataSemana));
+  calcularAciertos();
+    }
     function guardarPick(p){
-      const dataSemana = JSON.parse(localStorage.getItem("semana"+semana)) || [];
-      dataSemana[i-1] = {
-        local: locNombre.querySelector("img") ? getTeamFromImg(locNombre.querySelector("img").src) : "",
-        visitante: visNombre.querySelector("img") ? getTeamFromImg(visNombre.querySelector("img").src) : "",
-        ganador: selGan.value || "",
-        pick: p
-      };
-      localStorage.setItem("semana"+semana, JSON.stringify(dataSemana));
-      calcularAciertos();
+  const dataSemana = JSON.parse(localStorage.getItem("semana"+semana)) || [];
+
+  dataSemana[i-1] = {
+    local: equipoLocal,
+    visitante: equipoVisitante,
+    ganador: selGan.value || "",
+    pick: p
+  };
+
+  localStorage.setItem("semana"+semana, JSON.stringify(dataSemana));
+  calcularAciertos();
     }
 
     /* Eventos */
@@ -418,24 +423,34 @@ function crearJuegos(){
     selBtnLoc.onclick = e => { e.stopPropagation(); if(!bloqueo){ menuLoc.classList.toggle("activo"); menuVis.classList.remove("activo"); }};
 
     menuVis.querySelectorAll(".item-equipo").forEach(item=>{
-      item.onclick=()=>{
-        if(bloqueo) return;
-        const t=item.dataset.team;
-        visNombre.innerHTML=`<img class="logo" src="${logos[t]}">`;
-        menuVis.classList.remove("activo");
-        guardar();
-      };
-    });
+  item.onclick=()=>{
+    if(bloqueo) return;
+
+    const t = item.dataset.team;
+
+    // 🔥 GUARDAR EQUIPO
+    equipoVisitante = t;
+
+    visNombre.innerHTML=`<img class="logo" src="${logos[t]}">`;
+    menuVis.classList.remove("activo");
+    guardar();
+  };
+  });
 
     menuLoc.querySelectorAll(".item-equipo").forEach(item=>{
-      item.onclick=()=>{
-        if(bloqueo) return;
-        const t=item.dataset.team;
-        locNombre.innerHTML=`<img class="logo" src="${logos[t]}">`;
-        menuLoc.classList.remove("activo");
-        guardar();
-      };
-    });
+  item.onclick=()=>{
+    if(bloqueo) return;
+
+    const t = item.dataset.team;
+
+    // 🔥 GUARDAR EQUIPO
+    equipoLocal = t;
+
+    locNombre.innerHTML=`<img class="logo" src="${logos[t]}">`;
+    menuLoc.classList.remove("activo");
+    guardar();
+  };
+});
 
     document.addEventListener("click", e=>{
       if(!juego.contains(e.target)){
@@ -453,14 +468,6 @@ function crearJuegos(){
 
   aplicarBloqueo();
   calcularAciertos();
-}
-
-/* Obtener equipo desde URL del logo */
-function getTeamFromImg(src){
-  for(const t in logos){
-    if(src.includes(logos[t])) return t;
-  }
-  return "";
 }
 
 /* Aciertos (empate NO suma) */
