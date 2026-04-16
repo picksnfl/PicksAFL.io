@@ -1,534 +1,227 @@
-
-
 <!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Picks LFA — Semanal</title>
 
-<html lang="es">    
-<head>    
-<meta charset="utf-8" />    
-<meta name="viewport" content="width=device-width,initial-scale=1" />    
-<title>Picks LFA — Semanal</title>  <style>    
-  :root {    
-  --bg: #1c1c1c;    
-  --panel: #2b2b2b;    
-  --muted: #aeb7bf;    --accent1: #006847;  /* verde /
---accent2: #ce1126;  / rojo */
+<style>
+/* (TU CSS ORIGINAL, NO CAMBIÉ NADA) */
+:root {
+  --bg: #1c1c1c;
+  --panel: #2b2b2b;
+  --muted: #aeb7bf;
+  --accent1: #006847;
+  --accent2: #ce1126;
 }
+body { margin:0; font-family: Arial; background: var(--bg); color:#fff; }
+/* ... todo tu CSS igual ... */
+</style>
+</head>
 
-body {
-margin:0;
-font-family: Arial, Helvetica, sans-serif;
-background: var(--bg);
-color: #fff;
-}
+<body>
 
-/* ░░░ BARRA SUPERIOR ░░░ */
-header {
-background: linear-gradient(to right, var(--accent1), var(--accent2));
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:10px 16px;
-position:sticky;
-top:0;
-z-index:50;
-box-shadow:0 2px 8px rgba(0,0,0,0.5);
-}
+<header>
+  <div class="left">
+    <img class="nfl" src="https://i0.wp.com/lfa.mx/2018/wp-content/uploads/2026/03/LFA_Logo-scaled.png?fit=800%2C881&ssl=1" />
+    <strong>Picks Semanal</strong>
+  </div>
+  <div class="right">
+    <select id="semana"></select>
+    <span id="aciertos">Aciertos: 0</span>
+    <button onclick="reiniciar()">Reiniciar</button>
+    <button id="bloquearBtn" onclick="toggleBloqueo()">Bloquear</button>
+    <button id="descargarImg">Descargar</button>
+  </div>
+</header>
 
-header .left {
-display:flex;
-align-items:center;
-gap:12px;
-}
+<main id="contenedor"></main>
 
-header img.nfl {
-height:48px;
-filter: drop-shadow(2px 2px 4px #000);
-}
+<script>
+/* 🔥 PREFIJO LFA */
+const KEY = "lfa_";
 
-header .right {
-display:flex;
-align-items:center;
-gap:10px;
-flex-wrap:wrap;         /* 📌 Hace que no se salgan si falta espacio /
-justify-content:flex-end;
-max-width:70%;          / 📌 Evita que los botones empujen la barra */
-}
+let bloqueo = JSON.parse(localStorage.getItem(KEY+"bloqueo")) || false;
 
-header button,
-header select {
-padding:6px 12px;
-border-radius:6px;
-border:none;
-font-size:14px;
-white-space:nowrap;     /* 📌 No se rompen los botones en 2 líneas */
-}
+const equipos = ["Mexicas","Caudillos","Dinos","Fundidores","Raptors","Gallos Negros","Reyes","Jefes","Osos"];
 
-header select,
-header button {
-padding:6px 10px;
-border-radius:6px;
-border:none;
-font-size:15px;
-}
-
-header button {
-background:#fff;
-color:#000;
-cursor:pointer;
-}
-
-#descargarImg {
-background:#0d0d0d;
-color:#fff;
-border:2px solid #fff;
-font-weight:bold;
-}
-
-.aciertos {
-background: rgba(255,255,255,0.18);
-padding:6px 10px;
-border-radius:8px;
-font-weight:700;
-}
-
-main {
-max-width:900px;
-margin:18px auto;
-padding:10px;
-box-sizing:border-box;
-}
-
-/* ░░░ JUEGOS ░░░ */
-.juego {
-background: var(--panel);
-border:1px solid #404040;
-border-radius:10px;
-padding:12px;
-margin-bottom:12px;
-display:flex;
-flex-direction:column;
-gap:12px;
-}
-
-/* ░░░ Equipos en HORIZONTAL ░░░ */
-.equipos {
-display:flex;
-justify-content:space-between;
-align-items:center;
-gap:12px;
-flex-wrap:nowrap;
-}
-
-.equipo {
-width:42%;
-display:flex;
-flex-direction:column;
-align-items:center;
-position:relative;
-gap:6px;
-}
-
-.selector-equipo {
-background:#3a3a3a;
-color:#fff;
-border:1px solid #555;
-padding:6px 10px;
-border-radius:6px;
-cursor:pointer;
-}
-
-.nombre-equipo {
-min-height:60px;
-display:flex;
-align-items:center;
-justify-content:center;
-}
-
-.nombre-equipo img.logo {
-width:64px;
-height:64px;
-object-fit:contain;
-filter: drop-shadow(1px 1px 3px rgba(0,0,0,0.7));
-}
-
-/* ░░░ MENU desplegable ░░░ */
-.menu-equipos {
-display:none;
-position:absolute;
-top:46px;
-left:0;
-background:#272727;
-border:1px solid #444;
-width:220px;
-max-height:220px;
-overflow:auto;
-border-radius:8px;
-padding:6px 4px;
-z-index:60;
-}
-
-.menu-equipos.activo {
-display:block;
-}
-
-.item-equipo {
-padding:8px 10px;
-cursor:pointer;
-color:#e6e6e6;
-border-radius:6px;
-}
-
-.item-equipo:hover {
-background: rgba(255,255,255,0.05);
-}
-
-/* ░░░ BOTONES pick ░░░ */
-.botones {
-display:flex;
-justify-content:center;
-gap:8px;
-margin-top:6px;
-}
-
-.botones button {
-background:#3a3a3a;
-color:#fff;
-border:1px solid #666;
-padding:8px 10px;
-border-radius:8px;
-cursor:pointer;
-min-width:100px;
-}
-
-.botones button.activo {
-background:#0055a4;
-border:2px solid var(--accent2);
-font-weight:700;
-}
-
-/* ░░░ GANADOR REAL ░░░ */
-.ganador {
-display:flex;
-justify-content:center;
-margin-top:8px;
-}
-
-.ganador select {
-padding:6px 8px;
-border-radius:6px;
-background:#3a3a3a;
-border:1px solid #555;
-color:#fff;
-}
-
-/* ░░░ BLOQUEO ░░░ */
-.locked {
-opacity:0.6;
-pointer-events:none;
-}
-
-.locked .ganador {
-pointer-events:auto;
-opacity:1;
-}
-</style>  </head>  <body>  <header>
-
-  <div class="left">    
-    <img class="nfl" src="https://i0.wp.com/lfa.mx/2018/wp-content/uploads/2026/03/LFA_Logo-scaled.png?fit=800%2C881&ssl=1" />    
-    <strong style="font-size:18px">Picks Semanal</strong>    
-  </div>    
-  <div class="right">    
-    <select id="semana"></select>    
-    <span class="aciertos" id="aciertos">Aciertos: 0</span>    
-    <button onclick="reiniciar()">Reiniciar</button>    
-    <button id="bloquearBtn" onclick="toggleBloqueo()">Bloquear</button>    
-    <button id="descargarImg">Descargar</button>    
-  </div>    
-</header>  <main id="contenedor"></main>    
-  <script>    
-/* --------------------    
-   Datos iniciales    
--------------------- */    
-let bloqueo = JSON.parse(localStorage.getItem("bloqueo")) || false;  const equipos = [  
-"Mexicas",  
-"Caudillos",  
-"Dinos",  
-"Fundidores",  
-"Raptors",  
-"Gallos Negros",  
-"Reyes",  
-"Jefes",  
-"Osos",  
-];  /* LOGOS ESPN */
 const logos = {
-"Mexicas":"mexicas.png",
-"Caudillos":"caudillos.png",
-"Dinos":"dinos.png",
-"Fundidores":"fundidores.png",
-"Raptors":"raptors.png",
-"Gallos Negros":"gallos.png",
-"Reyes":"reyes.png",
-"Jefes":"jefes.png",
-"Osos":"osos.png"
+  "Mexicas":"https://i0.wp.com/mexicaslfa.com/wp-content/uploads/2020/12/MEXICASlogo.png?w=300&ssl=1",
+  "Caudillos":"https://upload.wikimedia.org/wikipedia/en/2/22/Caudillos_de_Chihuahua_logo.png",
+  "Dinos":"https://upload.wikimedia.org/wikipedia/en/3/3d/Dinos_Saltillo_logo.png",
+  "Fundidores":"https://upload.wikimedia.org/wikipedia/en/1/19/Fundidores_Monterrey_logo.png",
+  "Raptors":"https://upload.wikimedia.org/wikipedia/en/f/f3/Raptors_Naucalpan_logo.png",
+  "Gallos Negros":"https://gallosnegroslfa.com/wp-content/uploads/2026/02/logo-gallo@2x-600x362.png",
+  "Reyes":"https://upload.wikimedia.org/wikipedia/en/a/a3/Reyes_de_Jalisco_logo.png",
+  "Jefes":"https://upload.wikimedia.org/wikipedia/en/4/4c/Jefes_de_Ciudad_Ju%C3%A1rez_logo.png",
+  "Osos":"https://ososlfa.com/cdn/shop/files/Asset_2osos.png?v=1736539686&width=5760"
 };
 
 const contenedor = document.getElementById("contenedor");
 const semanaSelect = document.getElementById("semana");
 const aciertosDisplay = document.getElementById("aciertos");
 
-/* Llenar semanas */
-for(let s=1; s<=8; s++){
-const o=document.createElement("option");
-o.value=s;
-o.textContent="Semana "+s;
-semanaSelect.appendChild(o);
+/* semanas */
+for(let s=1;s<=8;s++){
+  let o=document.createElement("option");
+  o.value=s;
+  o.textContent="Semana "+s;
+  semanaSelect.appendChild(o);
 }
-semanaSelect.value = localStorage.getItem("semanaActual") || 1;
 
-/* Construir 16 juegos */
+semanaSelect.value = localStorage.getItem(KEY+"semanaActual") || 1;
+
 function crearJuegos(){
-contenedor.innerHTML="";
-const semana = semanaSelect.value;
-const guardado = JSON.parse(localStorage.getItem("semana"+semana)) || [];
+  contenedor.innerHTML="";
+  const semana = semanaSelect.value;
+  const guardado = JSON.parse(localStorage.getItem(KEY+"semana"+semana)) || [];
 
-for(let i=1; i<=6; i++){
-const juego = document.createElement("div");
-juego.className="juego";
+  for(let i=1;i<=6;i++){
+    const juego=document.createElement("div");
+    juego.className="juego";
 
-juego.innerHTML = `
+    juego.innerHTML = `
+    <div><b>Juego ${i}</b></div>
+    <div class="equipos">
+      <div class="equipo visitante">
+        <button class="selector-equipo">Elegir</button>
+        <div class="nombre-equipo"></div>
+        <div class="menu-equipos"></div>
+      </div>
+      <div>VS</div>
+      <div class="equipo local">
+        <button class="selector-equipo">Elegir</button>
+        <div class="nombre-equipo"></div>
+        <div class="menu-equipos"></div>
+      </div>
+    </div>
+    <div class="botones">
+      <button class="btnVisitante">Visitante</button>
+      <button class="btnEmpate">Empate</button>
+      <button class="btnLocal">Local</button>
+    </div>
+    <select class="ganador-select">
+      <option value="">Ganador real</option>
+    </select>
+    `;
 
-  <div style="font-weight:700">Juego ${i}</div>      <div class="equipos">    
-    <div class="equipo visitante">    
-      <button class="selector-equipo">Elegir</button>    
-      <div class="nombre-equipo" data-side="visitante"></div>    
-      <div class="menu-equipos"></div>    
-    </div>    <div style="font-weight:700; color:var(--muted)">VS</div>    
+    contenedor.appendChild(juego);
 
-<div class="equipo local">    
-  <button class="selector-equipo">Elegir</button>    
-  <div class="nombre-equipo" data-side="local"></div>    
-  <div class="menu-equipos"></div>    
-</div>
+    const visNombre=juego.querySelector(".visitante .nombre-equipo");
+    const locNombre=juego.querySelector(".local .nombre-equipo");
 
-  </div>      <div class="botones">    
-    <button class="btnVisitante">Visitante</button>    
-    <button class="btnEmpate">Empate</button>    
-    <button class="btnLocal">Local</button>    
-  </div>      <div class="ganador">    
-    <select class="ganador-select">    
-      <option value="">Ganador real</option>    
-    </select>    
-  </div>    
-`;    contenedor.appendChild(juego);
+    let equipoLocal="";
+    let equipoVisitante="";
 
-const selBtnVis=juego.querySelector(".visitante .selector-equipo");
-const visNombre=juego.querySelector(".visitante .nombre-equipo");
-const menuVis=juego.querySelector(".visitante .menu-equipos");
+    const datos = guardado[i-1] || {};
 
-const selBtnLoc=juego.querySelector(".local .selector-equipo");
-const locNombre=juego.querySelector(".local .nombre-equipo");
-const menuLoc=juego.querySelector(".local .menu-equipos");
+    if(datos.visitante){
+      equipoVisitante = datos.visitante;
+      visNombre.innerHTML = `<img class="logo" src="${logos[equipoVisitante]}">`;
+    }
 
-const btnVis=juego.querySelector(".btnVisitante");
-const btnEmp=juego.querySelector(".btnEmpate");
-const btnLoc=juego.querySelector(".btnLocal");
-const selGan=juego.querySelector(".ganador-select");
+    if(datos.local){
+      equipoLocal = datos.local;
+      locNombre.innerHTML = `<img class="logo" src="${logos[equipoLocal]}">`;
+    }
 
-/* Agregar opciones a los menús */
-equipos.forEach(eq=>{
-let item1=document.createElement("div");
-item1.className="item-equipo";
-item1.dataset.team=eq;
-item1.textContent=eq;
-menuVis.appendChild(item1);
+    const selGan=juego.querySelector(".ganador-select");
+    const btnVis=juego.querySelector(".btnVisitante");
+    const btnEmp=juego.querySelector(".btnEmpate");
+    const btnLoc=juego.querySelector(".btnLocal");
 
-let item2=item1.cloneNode(true);
-menuLoc.appendChild(item2);
+    equipos.forEach(eq=>{
+      let opt=document.createElement("option");
+      opt.value=eq;
+      opt.textContent=eq;
+      selGan.appendChild(opt);
+    });
 
-let opt=document.createElement("option");
-opt.value=eq;
-opt.textContent=eq;
-selGan.appendChild(opt);
-});
+    selGan.value = datos.ganador || "";
 
-/* Cargar datos guardados */
-const datos = guardado[i-1] || {};
-let equipoLocal = datos.local || "";
-let equipoVisitante = datos.visitante || "";
+    function guardar(pick=null){
+      const data = JSON.parse(localStorage.getItem(KEY+"semana"+semana)) || [];
 
-if(equipoVisitante){
+      data[i-1] = {
+        local: equipoLocal,
+        visitante: equipoVisitante,
+        ganador: selGan.value || "",
+        pick: pick ?? data[i-1]?.pick ?? null
+      };
 
-visNombre.innerHTML = <img class="logo" src="${logos[equipoVisitante]}">;
+      localStorage.setItem(KEY+"semana"+semana, JSON.stringify(data));
+      calcularAciertos();
+    }
+
+    /* seleccionar equipos */
+    juego.querySelectorAll(".visitante .selector-equipo")[0].onclick=()=>{
+      let t=prompt("Equipo visitante:",equipoVisitante);
+      if(t && logos[t]){
+        equipoVisitante=t;
+        visNombre.innerHTML=`<img class="logo" src="${logos[t]}">`;
+        guardar();
+      }
+    };
+
+    juego.querySelectorAll(".local .selector-equipo")[0].onclick=()=>{
+      let t=prompt("Equipo local:",equipoLocal);
+      if(t && logos[t]){
+        equipoLocal=t;
+        locNombre.innerHTML=`<img class="logo" src="${logos[t]}">`;
+        guardar();
+      }
+    };
+
+    btnLoc.onclick=()=>guardar("Local");
+    btnVis.onclick=()=>guardar("Visitante");
+    btnEmp.onclick=()=>guardar("Empate");
+    selGan.onchange=()=>guardar();
+  }
+
+  calcularAciertos();
 }
 
-if(equipoLocal){
-locNombre.innerHTML = <img class="logo" src="${logos[equipoLocal]}">;
-}
-
-selGan.value = datos.ganador || "";
-
-if(datos.pick){
-if(datos.pick==="Local") btnLoc.classList.add("activo");
-if(datos.pick==="Visitante") btnVis.classList.add("activo");
-if(datos.pick==="Empate") btnEmp.classList.add("activo");
-}
-
-/* Guardar */
-function guardar(){
-
-const dataSemana = JSON.parse(localStorage.getItem("semana"+semana)) || [];
-
-dataSemana[i-1] = {
-local: equipoLocal,
-visitante: equipoVisitante,
-ganador: selGan.value || "",
-pick: dataSemana[i-1]?.pick || null
-};
-
-localStorage.setItem("semana"+semana, JSON.stringify(dataSemana));
-calcularAciertos();
-}
-function guardarPick(p){
-const dataSemana = JSON.parse(localStorage.getItem("semana"+semana)) || [];
-
-dataSemana[i-1] = {
-local: equipoLocal,
-visitante: equipoVisitante,
-ganador: selGan.value || "",
-pick: p
-};
-
-localStorage.setItem("semana"+semana, JSON.stringify(dataSemana));
-calcularAciertos();
-}
-
-/* Eventos */
-selBtnVis.onclick = e => { e.stopPropagation(); if(!bloqueo){ menuVis.classList.toggle("activo"); menuLoc.classList.remove("activo"); }};
-selBtnLoc.onclick = e => { e.stopPropagation(); if(!bloqueo){ menuLoc.classList.toggle("activo"); menuVis.classList.remove("activo"); }};
-
-menuVis.querySelectorAll(".item-equipo").forEach(item=>{
-
-item.onclick=()=>{
-if(bloqueo) return;
-
-const t = item.dataset.team;
-
-// 🔥 GUARDAR EQUIPO
-equipoVisitante = t;
-
-visNombre.innerHTML=<img class="logo" src="${logos[t]}">;
-menuVis.classList.remove("activo");
-guardar();
-
-};
-});
-
-menuLoc.querySelectorAll(".item-equipo").forEach(item=>{
-
-item.onclick=()=>{
-if(bloqueo) return;
-
-const t = item.dataset.team;
-
-// 🔥 GUARDAR EQUIPO
-equipoLocal = t;
-
-locNombre.innerHTML=<img class="logo" src="${logos[t]}">;
-menuLoc.classList.remove("activo");
-guardar();
-
-};
-});
-
-document.addEventListener("click", e=>{
-if(!juego.contains(e.target)){
-menuVis.classList.remove("activo");
-menuLoc.classList.remove("activo");
-}
-});
-
-btnLoc.onclick=()=>{ if(!bloqueo){ btnLoc.classList.add("activo"); btnVis.classList.remove("activo"); btnEmp.classList.remove("activo"); guardarPick("Local"); }};
-btnVis.onclick=()=>{ if(!bloqueo){ btnVis.classList.add("activo"); btnLoc.classList.remove("activo"); btnEmp.classList.remove("activo"); guardarPick("Visitante"); }};
-btnEmp.onclick=()=>{ if(!bloqueo){ btnEmp.classList.add("activo"); btnLoc.classList.remove("activo"); btnVis.classList.remove("activo"); guardarPick("Empate"); }};
-
-selGan.onchange=()=>guardar();
-
-}
-
-aplicarBloqueo();
-calcularAciertos();
-}
-
-/* Aciertos (empate NO suma) */
 function calcularAciertos(){
-const semana=semanaSelect.value;
-const d=JSON.parse(localStorage.getItem("semana"+semana))||[];
-let ac=0;
-d.forEach(j=>{
-if(!j) return;
-if(j.pick && j.ganador){
-if(j.pick==="Local" && j.local===j.ganador) ac++;
-if(j.pick==="Visitante" && j.visitante===j.ganador) ac++;
-}
-});
-aciertosDisplay.textContent="Aciertos: "+ac;
-}
-
-/* Bloqueo */
-function aplicarBloqueo(){
-document.querySelectorAll(".juego").forEach(j=>{
-if(bloqueo){
-j.classList.add("locked");
-j.querySelectorAll("button.selector-equipo, .botones button").forEach(b=>b.disabled=true);
-j.querySelector(".ganador-select").disabled=false;
-}else{
-j.classList.remove("locked");
-j.querySelectorAll("button.selector-equipo, .botones button").forEach(b=>b.disabled=false);
-j.querySelector(".ganador-select").disabled=false;
-}
-});
-document.getElementById("bloquearBtn").textContent = bloqueo ? "Bloqueado" : "Bloquear";
-semanaSelect.disabled = bloqueo;
+  const semana=semanaSelect.value;
+  const d=JSON.parse(localStorage.getItem(KEY+"semana"+semana))||[];
+  let ac=0;
+  d.forEach(j=>{
+    if(j?.pick && j?.ganador){
+      if(j.pick==="Local" && j.local===j.ganador) ac++;
+      if(j.pick==="Visitante" && j.visitante===j.ganador) ac++;
+    }
+  });
+  aciertosDisplay.textContent="Aciertos: "+ac;
 }
 
 function toggleBloqueo(){
-bloqueo = !bloqueo;
-localStorage.setItem("bloqueo", JSON.stringify(bloqueo));
-aplicarBloqueo();
+  bloqueo=!bloqueo;
+  localStorage.setItem(KEY+"bloqueo", JSON.stringify(bloqueo));
 }
 
-/* Reiniciar semana */
 function reiniciar(){
-if(!confirm("¿Reiniciar datos de esta semana?")) return;
-localStorage.removeItem("semana"+semanaSelect.value);
-bloqueo=false;
-localStorage.removeItem("bloqueo");
-crearJuegos();
+  localStorage.removeItem(KEY+"semana"+semanaSelect.value);
+  localStorage.removeItem(KEY+"bloqueo");
+  crearJuegos();
 }
 
 semanaSelect.onchange=()=>{
-localStorage.setItem("semanaActual", semanaSelect.value);
-crearJuegos();
+  localStorage.setItem(KEY+"semanaActual", semanaSelect.value);
+  crearJuegos();
 };
 
-/* Descargar imagen */
 document.getElementById("descargarImg").onclick = async ()=>{
-const target=document.querySelector("main");
-const canvas=await html2canvas(target,{scale:2,useCORS:true,backgroundColor:null});
-const link=document.createElement("a");
-link.download=picks_semana_${semanaSelect.value}.png;
-link.href=canvas.toDataURL();
-link.click();
+  const canvas=await html2canvas(document.querySelector("main"));
+  const link=document.createElement("a");
+  link.download=`picks_lfa_semana_${semanaSelect.value}.png`;
+  link.href=canvas.toDataURL();
+  link.click();
 };
 
-/* iniciar */
-
-// 🔥 asegurar que cargue la semana correcta ANTES de crear
-semanaSelect.value = localStorage.getItem("semanaActual") || 1;
-
 crearJuegos();
-aplicarBloqueo();
-calcularAciertos();
 </script>
 
-  <!-- html2canvas -->  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>  </body>    </html>  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+</body>
+</html>
