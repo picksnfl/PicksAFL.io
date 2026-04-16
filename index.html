@@ -542,6 +542,11 @@ function reiniciar(){
   aplicarBloqueo();
 }
 
+  semanaSelect.onchange = () => {
+  localStorage.setItem("lfa_semanaActual", semanaSelect.value);
+  crearJuegos();
+};
+
 /* Descargar */
 document.getElementById("descargarImg").onclick = async ()=>{
   const canvas=await html2canvas(document.querySelector("main"),{scale:2,useCORS:true});
