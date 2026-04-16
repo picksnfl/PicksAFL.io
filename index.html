@@ -257,7 +257,7 @@ header select {
 /* --------------------
    Datos iniciales
 -------------------- */
-let bloqueo = JSON.parse(localStorage.getItem("lfa_bloqueo")) || false;
+let bloqueo = JSON.parse(localStorage.getItem("lfa_bloqueo_"+ (localStorage.getItem("lfa_semanaActual") || 1))) || false;
 
 const equipos = [
   "Mexicas",
@@ -516,7 +516,7 @@ function aplicarBloqueo(){
   if(bloqueo) return;
 
   bloqueo = true;
-  localStorage.setItem("lfa_bloqueo", JSON.stringify(bloqueo));
+  localStorage.setItem("lfa_bloqueo_"+semanaSelect.value, JSON.stringify(bloqueo));
 
   aplicarBloqueo();
 
@@ -533,7 +533,7 @@ function reiniciar(){
 
   // 🔓 quitar bloqueo
   bloqueo = false;
-  localStorage.removeItem("lfa_bloqueo");
+  localStorage.removeItem("lfa_bloqueo_"+semanaSelect.value);
 
   // 👇 reactivar botón bloquear
   document.getElementById("bloquearBtn").disabled = false;
@@ -542,9 +542,19 @@ function reiniciar(){
   aplicarBloqueo();
 }
 
-  semanaSelect.onchange = () => {
+  semanaSelect.onchange=()=>{
+  // guardar semana independiente
   localStorage.setItem("lfa_semanaActual", semanaSelect.value);
+
+  // 🔓 quitar bloqueo al cambiar semana
+  bloqueo = false;
+  localStorage.removeItem("lfa_bloqueo");
+
+  // reactivar botón bloquear
+  document.getElementById("bloquearBtn").disabled = false;
+
   crearJuegos();
+  aplicarBloqueo();
 };
 
 /* Descargar */
