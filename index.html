@@ -257,7 +257,7 @@ header select {
 /* --------------------
    Datos iniciales
 -------------------- */
-let bloqueo = JSON.parse(localStorage.getItem("bloqueo")) || false;
+let bloqueo = JSON.parse(localStorage.getItem("lfa_bloqueo")) || false;
 
 const equipos = [
   "Mexicas",
@@ -295,13 +295,13 @@ for(let s=1; s<=8; s++){
   o.textContent="Semana "+s;
   semanaSelect.appendChild(o);
 }
-semanaSelect.value = localStorage.getItem("semanaActual") || 1;
+semanaSelect.value = localStorage.getItem("lfa_semanaActual") || 1;
 
 /* Construir juegos */
 function crearJuegos(){
   contenedor.innerHTML="";
   const semana = semanaSelect.value;
-  const guardado = JSON.parse(localStorage.getItem("semana_"+semana)) || [];
+  const guardado = JSON.parse(localStorage.getItem("lfa_semana_"+semana)) || [];
 
   for(let i=1; i<=6; i++){
     const juego = document.createElement("div");
@@ -420,7 +420,7 @@ document.addEventListener("click", (e)=>{
 
     /* Guardar */
     function guardar(pickActual=null){
-      const dataSemana = JSON.parse(localStorage.getItem("semana_"+semana)) || [];
+      const dataSemana = JSON.parse(localStorage.getItem("lfa_semana_"+semana)) || [];
 
       dataSemana[i-1] = {
         local: equipoLocal,
@@ -429,7 +429,7 @@ document.addEventListener("click", (e)=>{
         pick: pickActual !== null ? pickActual : dataSemana[i-1]?.pick || null
       };
 
-      localStorage.setItem("semana_"+semana, JSON.stringify(dataSemana));
+      localStorage.setItem("lfa_semana_"+semana, JSON.stringify(dataSemana));
       calcularAciertos();
     }
 
@@ -469,7 +469,7 @@ document.addEventListener("click", (e)=>{
 /* Aciertos */
 function calcularAciertos(){
   const semana=semanaSelect.value;
-  const d=JSON.parse(localStorage.getItem("semana_"+semana))||[];
+  const d=JSON.parse(localStorage.getItem("lfa_semana_"+semana))||[];
   let ac=0;
 
   d.forEach(j=>{
@@ -497,19 +497,19 @@ function aplicarBloqueo(){
 
 function toggleBloqueo(){
   bloqueo = !bloqueo;
-  localStorage.setItem("bloqueo", JSON.stringify(bloqueo));
+  localStorage.setItem("lfa_bloqueo", JSON.stringify(bloqueo));
   aplicarBloqueo();
 }
 
 /* Reiniciar */
 function reiniciar(){
   if(!confirm("¿Reiniciar datos de esta semana?")) return;
-  localStorage.removeItem("semana_"+semanaSelect.value);
+  localStorage.removeItem("lfa_semana_"+semanaSelect.value);
   crearJuegos();
 }
 
 semanaSelect.onchange=()=>{
-  localStorage.setItem("semanaActual", semanaSelect.value);
+  localStorage.setItem("lfa_semanaActual", semanaSelect.value);
   crearJuegos();
 };
 
