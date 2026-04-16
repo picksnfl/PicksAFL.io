@@ -257,7 +257,7 @@ header select {
 /* --------------------
    Datos iniciales
 -------------------- */
-let bloqueo = JSON.parse(localStorage.getItem("lfa_bloqueo_"+ (localStorage.getItem("lfa_semanaActual") || 1))) || false;
+let bloqueo = JSON.parse(localStorage.getItem("lfa_bloqueo_" + (localStorage.getItem("lfa_semanaActual") || 1))) || false;
 
 const equipos = [
   "Mexicas",
@@ -516,7 +516,7 @@ function aplicarBloqueo(){
   if(bloqueo) return;
 
   bloqueo = true;
-  localStorage.setItem("lfa_bloqueo_"+semanaSelect.value, JSON.stringify(bloqueo));
+  localStorage.setItem("lfa_bloqueo_" + semanaSelect.value, JSON.stringify(bloqueo));
 
   aplicarBloqueo();
 
@@ -543,15 +543,13 @@ function reiniciar(){
 }
 
   semanaSelect.onchange=()=>{
-  // guardar semana independiente
   localStorage.setItem("lfa_semanaActual", semanaSelect.value);
 
-  // 🔓 quitar bloqueo al cambiar semana
-  bloqueo = false;
-  localStorage.removeItem("lfa_bloqueo");
+  // 🔄 cargar bloqueo de ESTA semana
+  bloqueo = JSON.parse(localStorage.getItem("lfa_bloqueo_" + semanaSelect.value)) || false;
 
-  // reactivar botón bloquear
-  document.getElementById("bloquearBtn").disabled = false;
+  // 🔓 reactivar botón si no está bloqueado
+  document.getElementById("bloquearBtn").disabled = bloqueo;
 
   crearJuegos();
   aplicarBloqueo();
