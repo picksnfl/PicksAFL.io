@@ -375,11 +375,12 @@ function crearJuegos(){
     let equipoLocal = datos.local || "";
     let equipoVisitante = datos.visitante || "";
 
-    if(datos.visitante){
-      visNombre.innerHTML = `<img class="logo" src="${logos[datos.visitante]}" />`;
-    }
-    if(datos.local){
-      locNombre.innerHTML = `<img class="logo" src="${logos[datos.local]}" />`;
+    if(equipoVisitante){
+  visNombre.innerHTML = `<img class="logo" src="${logos[equipoVisitante]}">`;
+}
+
+if(equipoLocal){
+  locNombre.innerHTML = `<img class="logo" src="${logos[equipoLocal]}">`;
     }
 
     selGan.value = datos.ganador || "";
@@ -533,8 +534,13 @@ document.getElementById("descargarImg").onclick = async ()=>{
 };
 
 /* iniciar */
+
+// 🔥 asegurar que cargue la semana correcta ANTES de crear
+semanaSelect.value = localStorage.getItem("semanaActual") || 1;
+
 crearJuegos();
 aplicarBloqueo();
+calcularAciertos();
 </script>
   <!-- html2canvas -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
