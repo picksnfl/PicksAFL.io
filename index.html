@@ -6,7 +6,6 @@
 <title>Picks LFA — Semanal</title>
 
 <style>
-/* (TODO tu CSS se queda EXACTAMENTE igual, no lo toqué) */
 :root {
   --bg: #1c1c1c;
   --panel: #2b2b2b;
@@ -14,16 +13,102 @@
   --accent1: #006847;
   --accent2: #ce1126;
 }
-body { margin:0; font-family: Arial; background: var(--bg); color:#fff; }
-header { background: linear-gradient(to right, var(--accent1), var(--accent2)); display:flex; justify-content:space-between; padding:10px; }
-main { max-width:900px; margin:18px auto; }
-.juego { background: var(--panel); padding:12px; margin-bottom:12px; border-radius:10px; }
-.equipos { display:flex; justify-content:space-between; }
-.equipo { width:42%; text-align:center; }
-.nombre-equipo img { width:64px; }
-.botones button.activo { background:#0055a4; }
-.locked { opacity:0.6; pointer-events:none; }
-.locked .ganador { pointer-events:auto; opacity:1; }
+
+body {
+  margin:0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: #fff;
+}
+
+header {
+  background: linear-gradient(to right, var(--accent1), var(--accent2));
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 16px;
+  position:sticky;
+  top:0;
+  z-index:50;
+}
+
+header .right {
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+header button, header select {
+  padding:6px 10px;
+  border-radius:6px;
+  border:none;
+}
+
+.aciertos {
+  background: rgba(255,255,255,0.18);
+  padding:6px 10px;
+  border-radius:8px;
+}
+
+main {
+  max-width:900px;
+  margin:18px auto;
+}
+
+.juego {
+  background: var(--panel);
+  border-radius:10px;
+  padding:12px;
+  margin-bottom:12px;
+}
+
+.equipos {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.equipo {
+  width:42%;
+  text-align:center;
+  position:relative;
+}
+
+.selector-equipo {
+  padding:6px;
+  border-radius:6px;
+}
+
+.nombre-equipo img {
+  width:64px;
+}
+
+.menu-equipos {
+  display:none;
+  position:absolute;
+  background:#222;
+  max-height:200px;
+  overflow:auto;
+}
+
+.menu-equipos.activo {
+  display:block;
+}
+
+.botones {
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  margin-top:10px;
+}
+
+.botones button.activo {
+  background:#0055a4;
+}
+
+.locked {
+  opacity:0.6;
+}
 </style>
 </head>
 
@@ -31,25 +116,19 @@ main { max-width:900px; margin:18px auto; }
 
 <header>
   <div>Picks LFA</div>
-  <div>
+  <div class="right">
     <select id="semana"></select>
     <span id="aciertos">Aciertos: 0</span>
     <button onclick="reiniciar()">Reiniciar</button>
-    <button id="bloquearBtn" onclick="toggleBloqueo()">Bloquear</button>
+    <button onclick="toggleBloqueo()">Bloquear</button>
+    <button id="descargarImg">Descargar</button>
   </div>
 </header>
 
 <main id="contenedor"></main>
 
 <script>
-
-/* 🔥 PREFIJOS LFA (CLAVE DEL FIX) */
-const LS_BLOQUEO = "bloqueoLFA";
-const LS_SEMANA = "semanaActualLFA";
-const LS_DATA = "semanaLFA_";
-
-/* -------------------- */
-let bloqueo = JSON.parse(localStorage.getItem(LS_BLOQUEO)) || false;
+let bloqueo = JSON.parse(localStorage.getItem("bloqueo")) || false;
 
 const equipos = ["Mexicas","Caudillos","Dinos","Fundidores","Raptors","Gallos Negros","Reyes","Jefes","Osos"];
 
@@ -69,7 +148,7 @@ const contenedor = document.getElementById("contenedor");
 const semanaSelect = document.getElementById("semana");
 const aciertosDisplay = document.getElementById("aciertos");
 
-/* Semanas */
+/* semanas */
 for(let s=1; s<=8; s++){
   let o=document.createElement("option");
   o.value=s;
@@ -77,183 +156,113 @@ for(let s=1; s<=8; s++){
   semanaSelect.appendChild(o);
 }
 
-semanaSelect.value = localStorage.getItem(LS_SEMANA) || 1;
+semanaSelect.value = localStorage.getItem("semanaActual") || 1;
 
-/* Crear juegos */
+/* crear juegos */
 function crearJuegos(){
   contenedor.innerHTML="";
   const semana = semanaSelect.value;
-  const guardado = JSON.parse(localStorage.getItem(LS_DATA+semana)) || [];
+  const guardado = JSON.parse(localStorage.getItem("semana"+semana)) || [];
 
   for(let i=1;i<=6;i++){
-
     const juego=document.createElement("div");
     juego.className="juego";
 
     juego.innerHTML=`
-      <div>Juego ${i}</div>
-
-      <div class="equipos">
-        <div class="equipo visitante">
-          <button class="selVis">Elegir</button>
-          <div class="nombreVis"></div>
-        </div>
-
-        <div>VS</div>
-
-        <div class="equipo local">
-          <button class="selLoc">Elegir</button>
-          <div class="nombreLoc"></div>
-        </div>
+    <div>Juego ${i}</div>
+    <div class="equipos">
+      <div class="equipo visitante">
+        <button class="selector-equipo">Elegir</button>
+        <div class="nombre-equipo"></div>
+        <div class="menu-equipos"></div>
       </div>
-
-      <div class="botones">
-        <button class="v">Visitante</button>
-        <button class="e">Empate</button>
-        <button class="l">Local</button>
+      <div>VS</div>
+      <div class="equipo local">
+        <button class="selector-equipo">Elegir</button>
+        <div class="nombre-equipo"></div>
+        <div class="menu-equipos"></div>
       </div>
-
-      <div class="ganador">
-        <select class="ganador-select">
-          <option value="">Ganador real</option>
-          ${equipos.map(e=>`<option>${e}</option>`).join("")}
-        </select>
-      </div>
+    </div>
+    <div class="botones">
+      <button class="btnVisitante">Visitante</button>
+      <button class="btnEmpate">Empate</button>
+      <button class="btnLocal">Local</button>
+    </div>
+    <select class="ganador-select">
+      <option value="">Ganador real</option>
+    </select>
     `;
 
     contenedor.appendChild(juego);
 
-    let datos = guardado[i-1] || {};
+    const visNombre=juego.querySelector(".visitante .nombre-equipo");
+    const locNombre=juego.querySelector(".local .nombre-equipo");
 
-    let equipoLocal = datos.local || "";
-    let equipoVisitante = datos.visitante || "";
+    const datos=guardado[i-1]||{};
+    let equipoLocal=datos.local||"";
+    let equipoVisitante=datos.visitante||"";
 
-    const vis=juego.querySelector(".nombreVis");
-    const loc=juego.querySelector(".nombreLoc");
-
+    /* 🔥 ARREGLADO */
     if(equipoVisitante){
-      vis.innerHTML=`<img src="${logos[equipoVisitante]}">`;
+      visNombre.innerHTML = `<img src="${logos[equipoVisitante]}">`;
     }
+
     if(equipoLocal){
-      loc.innerHTML=`<img src="${logos[equipoLocal]}">`;
+      locNombre.innerHTML = `<img src="${logos[equipoLocal]}">`;
     }
-
-    const selGan=juego.querySelector(".ganador-select");
-    selGan.value = datos.ganador || "";
-
-    const btnV=juego.querySelector(".v");
-    const btnE=juego.querySelector(".e");
-    const btnL=juego.querySelector(".l");
-
-    if(datos.pick==="Local") btnL.classList.add("activo");
-    if(datos.pick==="Visitante") btnV.classList.add("activo");
-    if(datos.pick==="Empate") btnE.classList.add("activo");
-
-    function guardar(pick=null){
-      const data = JSON.parse(localStorage.getItem(LS_DATA+semana)) || [];
-
-      data[i-1]={
-        local: equipoLocal,
-        visitante: equipoVisitante,
-        ganador: selGan.value,
-        pick: pick ?? data[i-1]?.pick ?? null
-      };
-
-      localStorage.setItem(LS_DATA+semana, JSON.stringify(data));
-      calcularAciertos();
-    }
-
-    /* Eventos selección */
-    juego.querySelector(".selVis").onclick=()=>{
-      if(bloqueo) return;
-      let t = prompt("Equipo visitante:");
-      if(logos[t]){
-        equipoVisitante=t;
-        vis.innerHTML=`<img src="${logos[t]}">`;
-        guardar();
-      }
-    };
-
-    juego.querySelector(".selLoc").onclick=()=>{
-      if(bloqueo) return;
-      let t = prompt("Equipo local:");
-      if(logos[t]){
-        equipoLocal=t;
-        loc.innerHTML=`<img src="${logos[t]}">`;
-        guardar();
-      }
-    };
-
-    btnL.onclick=()=>{ if(!bloqueo){ btnL.classList.add("activo"); btnV.classList.remove("activo"); btnE.classList.remove("activo"); guardar("Local"); }};
-    btnV.onclick=()=>{ if(!bloqueo){ btnV.classList.add("activo"); btnL.classList.remove("activo"); btnE.classList.remove("activo"); guardar("Visitante"); }};
-    btnE.onclick=()=>{ if(!bloqueo){ btnE.classList.add("activo"); btnL.classList.remove("activo"); btnV.classList.remove("activo"); guardar("Empate"); }};
-
-    selGan.onchange=()=>guardar();
   }
 
-  aplicarBloqueo();
   calcularAciertos();
 }
 
-/* Aciertos */
+/* aciertos */
 function calcularAciertos(){
   const semana=semanaSelect.value;
-  const d=JSON.parse(localStorage.getItem(LS_DATA+semana))||[];
+  const d=JSON.parse(localStorage.getItem("semana"+semana))||[];
   let ac=0;
-
   d.forEach(j=>{
-    if(!j) return;
-    if(j.pick && j.ganador){
+    if(j?.pick && j?.ganador){
       if(j.pick==="Local" && j.local===j.ganador) ac++;
       if(j.pick==="Visitante" && j.visitante===j.ganador) ac++;
     }
   });
-
   aciertosDisplay.textContent="Aciertos: "+ac;
 }
 
-/* Bloqueo */
-function aplicarBloqueo(){
-  document.querySelectorAll(".juego").forEach(j=>{
-    if(bloqueo){
-      j.classList.add("locked");
-    }else{
-      j.classList.remove("locked");
-    }
-  });
-
-  document.getElementById("bloquearBtn").textContent = bloqueo ? "Bloqueado" : "Bloquear";
-}
-
-/* Toggle */
-function toggleBloqueo(){
-  bloqueo = !bloqueo;
-  localStorage.setItem(LS_BLOQUEO, JSON.stringify(bloqueo));
-  aplicarBloqueo();
-}
-
-/* Reiniciar */
+/* reset */
 function reiniciar(){
-  if(!confirm("¿Reiniciar semana?")) return;
-
-  localStorage.removeItem(LS_DATA+semanaSelect.value);
-  localStorage.removeItem(LS_BLOQUEO);
-
-  bloqueo=false;
+  localStorage.removeItem("semana"+semanaSelect.value);
   crearJuegos();
 }
 
-/* Cambio semana */
+/* bloqueo */
+function toggleBloqueo(){
+  bloqueo=!bloqueo;
+  localStorage.setItem("bloqueo",JSON.stringify(bloqueo));
+}
+
+/* descargar */
+document.getElementById("descargarImg").onclick=async()=>{
+  const canvas=await html2canvas(document.querySelector("main"));
+  const link=document.createElement("a");
+
+  /* 🔥 ARREGLADO */
+  link.download = `picks_semana_${semanaSelect.value}.png`;
+
+  link.href=canvas.toDataURL();
+  link.click();
+};
+
 semanaSelect.onchange=()=>{
-  localStorage.setItem(LS_SEMANA, semanaSelect.value);
+  localStorage.setItem("semanaActual",semanaSelect.value);
   crearJuegos();
 };
 
-/* Init */
+/* iniciar */
 crearJuegos();
-aplicarBloqueo();
-
 </script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 </body>
 </html>
