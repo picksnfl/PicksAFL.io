@@ -509,21 +509,38 @@ function aplicarBloqueo(){
   document.getElementById("bloquearBtn").textContent = bloqueo ? "🔒 Bloqueado" : "Bloquear";
 
   const btnBloquear = document.getElementById("bloquearBtn");
-btnBloquear.disabled = bloqueo;
+
     }
 
+  function toggleBloqueo(){
+  if(bloqueo) return;
+
+  bloqueo = true;
+  localStorage.setItem("lfa_bloqueo", JSON.stringify(bloqueo));
+
+  aplicarBloqueo();
+
+  // 👇 desactivar botón después de bloquear
+  document.getElementById("bloquearBtn").disabled = true;
+  }
+  
 /* Reiniciar */
 function reiniciar(){
   if(!confirm("¿Reiniciar datos de esta semana?")) return;
 
+  // borrar datos de la semana
   localStorage.removeItem("lfa_semana_"+semanaSelect.value);
 
+  // 🔓 quitar bloqueo
   bloqueo = false;
   localStorage.removeItem("lfa_bloqueo");
 
+  // 👇 reactivar botón bloquear
+  document.getElementById("bloquearBtn").disabled = false;
+
   crearJuegos();
   aplicarBloqueo();
-  }
+}
 
 /* Descargar */
 document.getElementById("descargarImg").onclick = async ()=>{
