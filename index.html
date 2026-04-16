@@ -487,31 +487,43 @@ function calcularAciertos(){
 function aplicarBloqueo(){
   document.querySelectorAll(".juego").forEach(j=>{
     j.classList.toggle("locked", bloqueo);
-    j.querySelectorAll("button").forEach(b=>b.disabled=bloqueo);
-    j.querySelector(".ganador-select").disabled=false;
+
+    // 🔒 SOLO bloquear selección de equipos
+    j.querySelectorAll(".selector-equipo").forEach(b=>{
+      b.disabled = bloqueo;
+    });
+
+    // 🔒 SOLO bloquear botones de picks
+    j.querySelectorAll(".botones button").forEach(b=>{
+      b.disabled = bloqueo;
+    });
+
+    // ✅ NO bloquear ganador
+    j.querySelector(".ganador-select").disabled = false;
   });
 
-  document.getElementById("bloquearBtn").textContent = bloqueo ? "Bloqueado" : "Bloquear";
-  semanaSelect.disabled = bloqueo;
-}
+  // ✅ NO bloquear selector de semana
+  semanaSelect.disabled = false;
 
-function toggleBloqueo(){
-  bloqueo = !bloqueo;
-  localStorage.setItem("lfa_bloqueo", JSON.stringify(bloqueo));
-  aplicarBloqueo();
-}
+  // texto del botón
+  document.getElementById("bloquearBtn").textContent = bloqueo ? "🔒 Bloqueado" : "Bloquear";
+
+  const btnBloquear = document.getElementById("bloquearBtn");
+btnBloquear.disabled = bloqueo;
+    }
 
 /* Reiniciar */
 function reiniciar(){
   if(!confirm("¿Reiniciar datos de esta semana?")) return;
-  localStorage.removeItem("lfa_semana_"+semanaSelect.value);
-  crearJuegos();
-}
 
-semanaSelect.onchange=()=>{
-  localStorage.setItem("lfa_semanaActual", semanaSelect.value);
+  localStorage.removeItem("lfa_semana_"+semanaSelect.value);
+
+  bloqueo = false;
+  localStorage.removeItem("lfa_bloqueo");
+
   crearJuegos();
-};
+  aplicarBloqueo();
+  }
 
 /* Descargar */
 document.getElementById("descargarImg").onclick = async ()=>{
