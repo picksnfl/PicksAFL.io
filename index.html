@@ -303,7 +303,7 @@ function crearJuegos(){
   const semana = semanaSelect.value;
   const guardado = JSON.parse(localStorage.getItem("lfa_semana_"+semana)) || [];
 
-  for(let i=1; i<=6; i++){
+  for(let i=1; i<=4; i++){
     const juego = document.createElement("div");
     juego.className="juego";
 
